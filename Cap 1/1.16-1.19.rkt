@@ -1,0 +1,69 @@
+#lang scheme
+;1.16
+(define (square x) (* x x))
+
+(define (fast-expt b n)
+  (cond ((= n 0) 1)
+        ((even? n) (square (fast-expt b (/ n 2))))
+        (else (* b (fast-expt b (- n 1))))))
+
+(define (even? n) (= (remainder n 2) 0))
+
+
+(define (expt b n)
+  (expt-iter b n 1))
+(define (expt-iter b counter product)
+  (cond ((= counter 0) product)
+        ((even? counter) (expt-iter (square b) (/ counter 2) product))
+        (else (expt-iter b (- counter 1) (* b product)))))
+
+;1.17
+(define (double a) (+ a a))
+(define (halve a) (/ a 2))
+      
+(define (fast-mult a b)
+  (cond ((= b 0) 0)
+        ((even? b) (fast-mult (double a) (halve b)))
+        (else (+ a (fast-mult a (- b 1))))))
+
+;1.18
+
+(define (prod-iter a b) (prod-loop a b 0))
+(define (prod-loop a b result)
+  (cond ((= b 0) result)
+        ((even? b) (prod-loop (double a) (halve b) result))
+        (else (prod-loop a (- b 1) (+ result a)))))
+
+;1.19
+
+(define (fibb n)
+  (fib-iter 1 0 n))
+
+(define (fib-iterr a b count)
+  (if (= count 0)
+      b
+      (fib-iter (+ a b) a (- count 1))))
+
+(define (fib n)
+  (fib-iter 1 0 0 1 n))
+
+(define (fib-iter a b p q count)
+  (cond ((= count 0) b)
+        ((even? count) (fib-iter
+                        a
+                        b
+                        (+ (* p p) (* q q))
+                        (+ (* 2 q p) (* q q))
+                        (/ count 2)))
+        (else (fib-iter (+ (* b q) (* a q) (* a p))
+                        (+ (* b p) (* a q))
+                        p
+                        q
+                        (- count 1)))))
+
+
+
+
+
+
+

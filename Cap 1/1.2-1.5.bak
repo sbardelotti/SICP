@@ -1,0 +1,17 @@
+#lang scheme
+(/
+ (+ 5 4 (- 2 (- 3 (+ 6 (/ 4 5)))))
+ (* 3
+    (- 6 2)
+    (- 2 7)))
+
+(define (square x)
+  (* x x))
+
+(define (sum-square x y)
+  (+ (square x) (square y)))
+
+(define (sum-large x y z)
+  (cond ((and (<= x y) (<= x z)) (sum-square y z))
+        ((and (<= y x) (<= y z)) (sum-square x z))
+        (else (sum-square x y))))

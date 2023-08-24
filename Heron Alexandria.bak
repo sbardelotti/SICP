@@ -1,0 +1,12 @@
+#lang scheme
+(define (sqrt x)
+  (define tolerance 0.00001)
+  (define (good-enough? y)
+    (< (abs (- (* y y) x)) tolerance))
+  (define (improve y)
+    (avarege (/ x y) y))
+  (define (try y)
+    (if (good-enough? y)
+        y
+        (try (improve y))))
+  (try 1))

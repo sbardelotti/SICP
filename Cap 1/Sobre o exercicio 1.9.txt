@@ -1,0 +1,118 @@
+The fundamental clever idea here is to try to speed up the computation
+by collapsing several steps into one, just like (as the problem points
+out) fast-exp. So, to turn that clever general idea into a specific
+solution, let's try applying T a few times by hand, starting with values
+a0 and b0:
+
+a1 = a0 + b0
+b1 = a0
+
+a2 = a1 + b1 = (a0 + b0) + b0 = 2a0 + b0
+b2 = a1 = a0 + b0
+
+a3 = a2 + b2 = (2a0+b0) + (a0+b0) = 3a0 + 2b0
+b3 = a2 = 2a0 + b0
+
+a4 = a3 + b3 = (3a0+2b0) + (2a0+b0) = 5a0 + 3b0
+b4 = a3 = 3a0 + 2b0
+
+Okay, what can we notice about the coefficients? In each iteration,
+the coefficient of a0 in bi equals the coefficient of b0 in ai.
+Call that q. And the coefficient of a0 in ai is the sum of q and
+the coefficient of b0 in bi; call the latter p. That's where these
+parameters come from, and why there isn't an r, etc.
+
+
+---
+
+Good question (and tough to answer concisely)! I think the best
+answer for this is that our transformation T can be represented by a
+matrix, and the iterative application is equivalent to exponentiating
+this matrix. It is hard to exponentiate a matrix *unless* the matrix
+has a special form: if we can express the matrix as the product
+of three matrices, Q, D, Q^-1, where D is a diagonal matrix, then
+we can quickly exponentiate the matrix. The transformations
+a <- bq + aq + ap and b <- bp + aq are derived from one possible
+way of creating matrices that can be easily raised to a power.
+
+---
+
+We're reminded of the transformation of the state variables a and b in the original fib-iter procedure from section 1.2.2: a ← a + b and b ← a. If these state changes are labeled transformation T, then applying T repeatedly for n iterations starting with a = 1 and b = 0 produces the pair a = Fib(n + 1) and b = Fib(n). So the Fibonacci numbers are produced by the nth power of the transformation T, or Tn, starting with the pair (1, 0).
+
+We are then asked to consider the family of transformations Tpq which transforms the pair (a, b) according to the following rules:
+
+a ← bq + aq + ap
+b ← bp + aq
+
+We can verify by quick substitution that the original transformation T is just a special case of Tpq, where p = 0 and q = 1.
+
+a ← b(1) + a(1) + a(0)
+a ← b + a
+
+b ← b(0) + a(1)
+b ← a
+
+We are asked to show that if we apply Tpq twice, the effect is the same as using a single transformation Tp'q' of the same form, and compute p' and q' in terms of p and q. This will give us an explicit way to square these transformations, which we can use to compute Tn using successive squaring, just like the fast-expt procedure from exercise 1.16.
+
+We can apply Tpq twice by defining new variables and using substitution. Let's define a1 and b1 as the results of applying transformation Tpq once
+
+a1 = bq + aq + ap
+b1 = bp + aq
+
+The next step is to define a2 and b2 and apply the tranformation a second time, this time using a1 and b1 in place of a and b.
+
+a2 = b1q + a1q + a1p
+b2 = b1p + a1q
+
+Now that we have a system of equations defined, we can use substitution on our way to simplifying.
+
+a2 = (bp + aq)q + (bq + aq + ap)q + (bq + aq + ap)p
+b2 = (bp + aq)p + (bq + aq + ap)q
+
+The second equation is shorter, so it should be easier to manipulate. Remember, we're trying to find p' and q', so we need to rewrite the equation to fit the form
+
+b2 = bp' + aq'
+
+where p' and q' can be computed in terms of q and p.
+
+b2 = (bp + aq)p + (bq + aq + ap)q
+= (bpp + apq) + (bqq + aqq + apq)
+= bpp + apq + bqq + aqq + apq
+= (bpp + bqq) + (2apq + aqq)
+= b(pp + qq) + a(2qp + qq)
+
+From this we can see that p' and q' can be computed using the following equations:
+
+p' = p2 + q2
+q' = 2pq + q2
+
+Manipulating the equation for a2 in the same way, we can verify those results. This time we're trying to fit the form
+
+a2 = bq' + aq' + ap'
+
+The groupings required for this manipulation are made even easier by the fact that we now already know the formulas for p' and q'.
+
+a2 = (bp + aq)q + (bq + aq + ap)q + (bq + aq + ap)p
+= (bpq + aqq) + (bqq + aqq + apq) + (bpq + apq + app)
+= bpq + aqq + bqq + aqq + apq + bpq + apq + app
+= (bpq + bpq + bqq) + (apq + apq + aqq) + (app + aqq)
+= b(pq + pq + qq) + a(pq + pq + qq) + a(pp + qq)
+= b(2pq + qq) + a(2pq + qq) + a(pp + qq)
+
+Now that we've verified the formulas for p' and q' in terms of p and q, we can use them to complete the procedure we were given.
+(define (fib n)
+   (fib-iter 1 0 0 1 n))
+
+(define (fib-iter a b p q count)
+   (cond ((= count 0) b)
+         ((even? count)
+          (fib-iter a
+                    b
+                    (+ (* p p) (* q q))     ; compute p'
+                    (+ (* 2 p q) (* q q))   ; compute q'
+                    (/ count 2)))
+         (else (fib-iter (+ (* b q) (* a q) (* a p))
+                         (+ (* b p) (* a q))
+                         p
+                         q
+                         (- count 1)))))
